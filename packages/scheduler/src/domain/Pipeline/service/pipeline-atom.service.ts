@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { defaultPagination } from '@/utils/orm';
-import { ValidationError } from 'common-errors';
-import { isNil } from 'lodash';
 import { AtomService } from '@/domain/Atom/service/atom.service';
-import { PipelineAtomCreateDTO } from '../dto/PipelineAtom.dto';
+import {
+  PipelineAtomCreateDTO,
+  PipelineAtomUpdateDTO,
+} from '../dto/PipelineAtom.dto';
 import { PipelineAtomEntity } from '../entity/pipeline-atom.entity';
 import { PipelineAtomRepository } from '../repo/pipeline-atom.repository';
 import { PipelineService } from './pipeline.service';
@@ -16,26 +17,22 @@ export class PipelineAtomService {
     private atomService: AtomService,
   ) {}
 
-  async create(data: PipelineAtomCreateDTO) {
-    if (isNil(data.creatorId)) {
-      throw new ValidationError(`creatorId is required`);
-    }
-
+  async create(data: PipelineAtomCreateDTO, creatorId: string) {
     const parentAtom = data.parentAtomId
-      ? await this.getById(data.parentAtomId, data.creatorId)
+      ? await this.getById(data.parentAtomId, creatorId)
       : null;
     const pipeline = data.pipelineId
-      ? await this.pipelineService.getById(data.pipelineId, data.creatorId)
+      ? await this.pipelineService.getById(data.pipelineId, creatorId)
       : null;
     const atom = data.atomId
-      ? await this.atomService.getById(data.atomId, data.creatorId)
+      ? await this.atomService.getById(data.atomId, creatorId)
       : null;
 
     const entity = PipelineAtomEntity.create({
       parentAtom,
       pipeline,
       atom,
-      creatorId: data.creatorId,
+      creatorId,
     });
     return this.repo.save(entity);
   }
@@ -72,5 +69,7 @@ export class PipelineAtomService {
     return this.repo.findByCreatorId(creatorId, pagination);
   }
 
-  // TODO: update
+  async update(id: number, creatorId: string, data: PipelineAtomUpdateDTO) {
+    return this.repo.update(id, creatorId, data);
+  }
 }

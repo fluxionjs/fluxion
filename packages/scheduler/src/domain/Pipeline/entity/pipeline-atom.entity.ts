@@ -1,4 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import * as dayjs from 'dayjs';
 import * as yup from 'yup';
 import { PipelineEntity } from './pipeline.entity';
@@ -9,21 +15,21 @@ import { PipelineAtomCreateDTO } from '../dto/PipelineAtom.dto';
 export const schema = yup.object().shape({
   parentAtom: yup
     .mixed<PipelineAtomEntity>()
-    .test(input => input instanceof PipelineAtomEntity),
+    .test((input) => input instanceof PipelineAtomEntity),
   pipeline: yup
     .mixed<PipelineEntity>()
-    .test(input => input instanceof PipelineEntity)
+    .test((input) => input instanceof PipelineEntity)
     .required(),
   atom: yup
     .mixed<AtomEntity>()
-    .test(input => input instanceof AtomEntity)
+    .test((input) => input instanceof AtomEntity)
     .required(),
   nextAtoms: yup
     .array()
     .of(
       yup
         .mixed<PipelineAtomEntity>()
-        .test(input => input instanceof PipelineAtomEntity)
+        .test((input) => input instanceof PipelineAtomEntity),
     ),
   creatorId: yup.string().min(1).required(),
 });

@@ -19,43 +19,56 @@ export class AtomRepository {
   }
 
   async getById(id: number, creatorId: string) {
-    return this.repo.findOne({
+    const entity = await this.repo.findOne({
       where: { id, creatorId },
     });
+    if (!entity) {
+      throw new NotFoundError(`Atom ${id}`);
+    }
+    return entity;
   }
 
   async getByName(name: string, creatorId: string) {
-    return this.repo.findOne({
+    const entity = await this.repo.findOne({
       where: {
         name,
         creatorId,
       },
     });
+    if (!entity) {
+      throw new NotFoundError(`Atom ${name}`);
+    }
+    return entity;
   }
 
   async update(id: number, creatorId: string, data: AtomUpdateDTO) {
     const entity = await this.getById(id, creatorId);
+    let updated = false;
     if (!entity) {
       throw new NotFoundError(`Atom ${id}`);
     }
 
     if (!isNil(data.connectUrl)) {
       entity.connectUrl = data.connectUrl;
+      updated = true;
     }
 
     if (!isNil(data.description)) {
       entity.description = data.description;
+      updated = true;
     }
 
     if (!isNil(data.enabled)) {
       entity.enabled = data.enabled;
+      updated = true;
     }
 
     if (!isNil(data.name)) {
       entity.name = data.name;
+      updated = true;
     }
 
-    return this.save(entity);
+    return updated ? this.save(entity) : entity;
   }
 
   async findByCreatorId(

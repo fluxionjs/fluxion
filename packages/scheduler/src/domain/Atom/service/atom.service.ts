@@ -1,12 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { AtomCreateDTO, AtomQueryDTO, AtomUpdateDTO } from '../dto/Atom.dto';
 import { AtomEntity } from '../entity/atom.entity';
 import { AtomRepository } from '../repo/atom.repository';
 import { defaultPagination } from '@/utils/orm';
+import { AtomWorkerService } from './atom-worker.service';
+import { AtomExecuteOptions } from '../worker/base-worker';
 
 @Injectable()
 export class AtomService {
-  constructor(private repo: AtomRepository) {}
+  constructor(
+    private repo: AtomRepository,
+    @Inject(forwardRef(() => AtomWorkerService))
+    private atomWorkerService: AtomWorkerService,
+  ) {}
 
   async create(data: AtomCreateDTO, userId: string) {
     const entity = AtomEntity.create({ ...data, creatorId: userId });
@@ -39,5 +45,13 @@ export class AtomService {
 
   async disable(id: number, userId: string) {
     return this.repo.disable(id, userId);
+  }
+
+  async execute<T>(
+    entity: AtomEntity,
+    payload: T,
+    options?: AtomExecuteOptions,
+  ) {
+    return this.atomWorkerService.execute(entity, payload, options);
   }
 }

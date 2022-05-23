@@ -3,7 +3,7 @@ import * as dayjs from 'dayjs';
 import * as yup from 'yup';
 import { dateTransformer } from '@/utils/orm';
 import { TaskStatus } from '../dto/Task.dto';
-import { TaskEntity } from './Task';
+import { TaskEntity } from './task.entity';
 import { TaskResultCreateDTO } from '../dto/TaskResult.dto';
 
 export const schema = yup.object().shape({
@@ -21,12 +21,13 @@ export const schema = yup.object().shape({
       TaskStatus.succeed,
     ])
     .required(),
-  content: yup.mixed().required(),
+  payload: yup.object().required(),
+  content: yup.object().required(),
   creatorId: yup.string().min(1).required(),
 });
 
 @Entity('task_result')
-export class TaskResultEntity<T = any> {
+export class TaskResultEntity<T = unknown, K = unknown> {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -37,7 +38,10 @@ export class TaskResultEntity<T = any> {
   status: TaskStatus;
 
   @Column('simple-json')
-  content: T;
+  payload: T;
+
+  @Column('simple-json')
+  content: K | Error;
 
   @Column({
     name: 'creator_id',
@@ -67,6 +71,7 @@ export class TaskResultEntity<T = any> {
     const entity = new TaskResultEntity();
     entity.task = data.task;
     entity.status = data.status;
+    entity.payload = data.payload;
     entity.content = data.content;
     entity.creatorId = data.creatorId;
     return entity;

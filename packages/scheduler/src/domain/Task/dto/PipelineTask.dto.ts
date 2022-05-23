@@ -1,13 +1,26 @@
+import { IsEnum, IsNumber, IsOptional, Min } from 'class-validator';
 import { TaskStatus } from './Task.dto';
 
-export interface PipelineTaskCreateDTO {
+export class PipelineTaskCreateDTO {
+  @IsNumber()
+  @Min(1)
   pipelineId: number;
+
+  @IsEnum(TaskStatus)
   status: TaskStatus;
-  creatorId: string;
+
+  @IsNumber()
+  @Min(1)
+  @IsOptional()
   rootTaskId?: number;
 }
 
-export interface PipelineTaskUpdateDTO {
+export class PipelineTaskUpdateDTO {
+  @IsEnum(TaskStatus)
+  @IsOptional()
   status?: TaskStatus;
+
+  @IsNumber()
+  @IsOptional()
   rootTaskId?: number;
 }

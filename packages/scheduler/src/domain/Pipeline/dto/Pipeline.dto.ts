@@ -1,17 +1,47 @@
-export interface PipelineCreateDTO {
+import { Transform } from 'class-transformer';
+import { IsString, IsBoolean, IsOptional, IsNotEmpty } from 'class-validator';
+import { transformBool } from '@/utils/dto';
+
+export class PipelineCreateDTO {
+  @IsString()
+  @IsNotEmpty()
   name: string;
+
+  @IsString()
+  @IsOptional()
   description?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  @Transform(transformBool)
   enabled?: boolean;
-  creatorId: string;
 }
 
-export interface PipelineQueryDTO {
+export class PipelineQueryDTO {
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
   name?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  @Transform(transformBool)
   enabled?: boolean;
 }
 
-export interface PipelineUpdateDTO {
+export class PipelineUpdateDTO {
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
   name?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
   description?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  @Transform(transformBool)
   enabled?: boolean;
 }

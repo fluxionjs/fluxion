@@ -11,8 +11,8 @@ import * as yup from 'yup';
 import { dateTransformer } from '@/utils/orm';
 import { AtomEntity } from '@/domain/Atom/entity/atom.entity';
 import { TaskCreateDTO, TaskStatus } from '../dto/Task.dto';
-import { TaskResultEntity } from './TaskResult';
-import { PipelineTaskEntity } from './PipelineTask';
+import { TaskResultEntity } from './task-result.entity';
+import { PipelineTaskEntity } from './pipeline-task.entity';
 
 export const schema = yup.object().shape({
   atom: yup
@@ -21,11 +21,12 @@ export const schema = yup.object().shape({
     .required(),
   pipelineTask: yup
     .mixed<PipelineTaskEntity>()
-    .test((input) => input instanceof PipelineTaskEntity),
+    .optional()
+    .test((input) => !input || input instanceof PipelineTaskEntity),
   result: yup
     .mixed<TaskResultEntity>()
-    .test((input) => input instanceof TaskResultEntity)
-    .required(),
+    .optional()
+    .test((input) => !input || input instanceof TaskResultEntity),
   status: yup
     .number()
     .integer()

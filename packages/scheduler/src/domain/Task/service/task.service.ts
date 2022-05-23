@@ -1,16 +1,18 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
-import { TaskCreateDTO, TaskStatus } from '../dto/Task.dto';
+import { TaskCreateDTO, TaskStatus, TaskUpdateDTO } from '../dto/Task.dto';
 import { TaskRepository } from '../repo/task.repository';
 import { AtomService } from '@/domain/Atom/service/atom.service';
-import { ValidationError } from 'common-errors';
-import { TaskEntity } from '../entity/Task';
+import { NotFoundError, ValidationError } from 'common-errors';
+import { TaskEntity } from '../entity/task.entity';
 import { defaultPagination } from '@/utils/orm';
 import { TaskResultService } from './task-result.service';
+import { isNil } from 'lodash';
 
 @Injectable()
 export class TaskService {
   constructor(
     private repo: TaskRepository,
+    @Inject(forwardRef(() => AtomService))
     private atomService: AtomService,
     @Inject(forwardRef(() => TaskResultService))
     private taskResultService: TaskResultService,
@@ -23,15 +25,20 @@ export class TaskService {
     }
 
     const atomEntity = await this.atomService.getById(atomId, creatorId);
-
-    const entity = TaskEntity.create({
+    const params: any = {
       atom: atomEntity,
-      result: data.result
-        ? await this.taskResultService.getById(data.result, creatorId)
-        : null,
       status: TaskStatus.pending,
       creatorId,
-    });
+    };
+
+    if (data.resultId) {
+      params.result = await this.taskResultService.getById(
+        data.resultId,
+        creatorId,
+      );
+    }
+
+    const entity = TaskEntity.create(params);
 
     return this.repo.save(entity);
   }
@@ -56,5 +63,33 @@ export class TaskService {
     return this.repo.findByCreatorId(creatorId, pagination);
   }
 
-  // TODO: update
+  async update(id: number, creatorId: string, data: TaskUpdateDTO) {
+    const entity = await this.getById(id, creatorId);
+    let updated = false;
+
+    if (!entity) {
+      throw new NotFoundError(`Task ${id}`);
+    }
+
+    if (!isNil(data.status)) {
+      entity.status = data.status;
+      updated = true;
+    }
+
+    if (!isNil(data.resultId)) {
+      const taskResultEntity = await this.taskResultService.getById(
+        data.resultId,
+        creatorId,
+      );
+
+      if (!taskResultEntity) {
+        throw new NotFoundError(`TaskResult ${data.resultId}`);
+      }
+
+      entity.result = taskResultEntity;
+      updated = true;
+    }
+
+    return updated ? this.repo.save(entity) : entity;
+  }
 }

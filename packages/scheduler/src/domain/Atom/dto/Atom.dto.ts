@@ -6,9 +6,15 @@ import {
   IsNotEmpty,
   Validate,
 } from 'class-validator';
-import * as url from 'url';
+import { isEmpty } from 'lodash';
+import { URL } from 'url';
 import { Pagination } from '@/utils/orm';
 import { transformBool } from '@/utils/dto';
+
+function isUrl(val: string) {
+  const url = new URL(val);
+  return !isEmpty(url.protocol) && !isEmpty(url.host);
+}
 
 export class AtomCreateDTO {
   @IsString()
@@ -25,7 +31,7 @@ export class AtomCreateDTO {
   enabled?: boolean;
 
   @IsString()
-  @Validate((val) => !!url.parse(val))
+  @Validate(isUrl)
   @IsNotEmpty()
   connectUrl: string;
 }
@@ -62,7 +68,7 @@ export class AtomUpdateDTO {
   enabled?: boolean;
 
   @IsString()
-  @Validate((val) => !!url.parse(val))
+  @Validate(isUrl)
   @IsNotEmpty()
   @IsOptional()
   connectUrl?: string;

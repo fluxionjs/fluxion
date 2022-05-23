@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { NotFoundError } from 'common-errors';
 import { Pagination } from '@/utils/orm';
-import { TaskResultEntity } from '../entity/TaskResult';
+import { TaskResultEntity } from '../entity/task-result.entity';
 import { TaskRepository } from './task.repository';
 
 @Injectable()
@@ -11,6 +11,7 @@ export class TaskResultRepository {
   constructor(
     @InjectRepository(TaskResultEntity)
     private repo: Repository<TaskResultEntity>,
+    @Inject(forwardRef(() => TaskRepository))
     private taskRepo: TaskRepository,
   ) {}
 
@@ -69,6 +70,4 @@ export class TaskResultRepository {
 
     return [list, total];
   }
-
-  // TODO: update
 }

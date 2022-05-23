@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { isNil } from 'lodash';
+import { isBoolean, isNil } from 'lodash';
 import { PipelineQueryDTO, PipelineUpdateDTO } from '../dto/Pipeline.dto';
 import { PipelineEntity } from '../entity/pipeline.entity';
 import { Pagination } from '@/utils/orm';
@@ -20,6 +20,7 @@ export class PipelineRepository {
 
   async update(id: number, creatorId: string, data: PipelineUpdateDTO) {
     const entity = await this.getById(id, creatorId);
+    let updated = false;
 
     if (!entity) {
       throw new NotFoundError(`Pipeline ${id}`);
@@ -27,17 +28,20 @@ export class PipelineRepository {
 
     if (!isNil(data.name)) {
       entity.name = data.name;
+      updated = true;
     }
 
     if (!isNil(data.description)) {
       entity.description = data.description;
+      updated = true;
     }
 
-    if (!isNil(data.enabled)) {
+    if (isBoolean(data.enabled)) {
       entity.enabled = data.enabled;
+      updated = true;
     }
 
-    return this.save(entity);
+    return updated ? this.save(entity) : entity;
   }
 
   async getById(id: number, creatorId: string) {
@@ -113,6 +117,4 @@ export class PipelineRepository {
     entity.enabled = false;
     return this.save(entity);
   }
-
-  // TODO: update
 }

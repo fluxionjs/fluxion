@@ -147,6 +147,7 @@ export class PipelineAtomRepository {
 
   async update(id: number, creatorId: string, data: PipelineAtomUpdateDTO) {
     const entity = await this.getById(id, creatorId);
+    let updated = false;
 
     if (!entity) {
       throw new NotFoundError(`PipelineAtom ${id}`);
@@ -154,9 +155,15 @@ export class PipelineAtomRepository {
 
     if (!isNil(data.parentAtomId)) {
       const parentAtom = await this.getById(data.parentAtomId, creatorId);
+
+      if (!parentAtom) {
+        throw new NotFoundError(`PipelineAtom ${data.parentAtomId}`);
+      }
+
       entity.parentAtom = parentAtom;
+      updated = true;
     }
 
-    return this.save(entity);
+    return updated ? this.save(entity) : entity;
   }
 }

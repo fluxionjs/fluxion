@@ -11,13 +11,13 @@ import * as yup from 'yup';
 import { dateTransformer } from '@/utils/orm';
 import { TaskStatus } from '../dto/Task.dto';
 import { PipelineEntity } from '@/domain/Pipeline/entity/pipeline.entity';
-import { TaskEntity } from './Task';
+import { TaskEntity } from './task.entity';
 import { PipelineTaskCreateDTO } from '../dto/PipelineTask.dto';
 
 export const schema = yup.object().shape({
   pipeline: yup
     .mixed<PipelineEntity>()
-    .test(input => input instanceof PipelineEntity)
+    .test((input) => input instanceof PipelineEntity)
     .required(),
   status: yup
     .number()
@@ -31,7 +31,7 @@ export const schema = yup.object().shape({
     .required(),
   rootTask: yup
     .mixed<TaskEntity>()
-    .test(input => input instanceof TaskEntity)
+    .test((input) => input instanceof TaskEntity)
     .required(),
   creatorId: yup.string().min(1).required(),
 });
@@ -53,7 +53,7 @@ export class PipelineTaskEntity {
   })
   creatorId: string;
 
-  @OneToOne(() => TaskEntity, task => task.pipelineTask)
+  @OneToOne(() => TaskEntity, (task) => task.pipelineTask)
   @JoinColumn({ name: 'root_task_id' })
   rootTask: TaskEntity;
 

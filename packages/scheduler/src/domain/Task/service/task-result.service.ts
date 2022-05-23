@@ -2,7 +2,7 @@ import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { NotFoundError } from 'common-errors';
 import { defaultPagination } from '@/utils/orm';
 import { TaskResultCreateDTO } from '../dto/TaskResult.dto';
-import { TaskResultEntity } from '../entity/TaskResult';
+import { TaskResultEntity } from '../entity/task-result.entity';
 import { TaskResultRepository } from '../repo/task-result.repository';
 import { TaskService } from './task.service';
 
@@ -14,11 +14,8 @@ export class TaskResultService {
     private taskService: TaskService,
   ) {}
 
-  async create<T>(data: TaskResultCreateDTO<T>) {
-    const taskEntity = await this.taskService.getById(
-      data.taskId,
-      data.creatorId,
-    );
+  async create<T>(data: TaskResultCreateDTO<T>, creatorId: string) {
+    const taskEntity = await this.taskService.getById(data.taskId, creatorId);
 
     if (!taskEntity) {
       throw new NotFoundError(`Task ${data.taskId}`);
@@ -27,8 +24,9 @@ export class TaskResultService {
     const entity = TaskResultEntity.create({
       task: taskEntity,
       status: data.status,
+      payload: data.payload,
       content: data.content,
-      creatorId: data.creatorId,
+      creatorId,
     });
 
     return this.repo.save(entity);
@@ -49,6 +47,4 @@ export class TaskResultService {
   async findByCreatorId(creatorId: string, pagination = defaultPagination) {
     return this.repo.findByCreatorId(creatorId, pagination);
   }
-
-  // TODO: update
 }

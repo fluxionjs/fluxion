@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { defaultPagination } from '@/utils/orm';
-import { PipelineCreateDTO, PipelineQueryDTO } from '../dto/Pipeline.dto';
+import {
+  PipelineCreateDTO,
+  PipelineQueryDTO,
+  PipelineUpdateDTO,
+} from '../dto/Pipeline.dto';
 import { PipelineEntity } from '../entity/pipeline.entity';
 import { PipelineRepository } from '../repo/pipeline.repository';
 
@@ -37,5 +41,7 @@ export class PipelineService {
     return this.repo.disable(id, creatorId);
   }
 
-  // TODO: update
+  async update(id: number, creatorId: string, data: PipelineUpdateDTO) {
+    return this.repo.update(id, creatorId, data);
+  }
 }

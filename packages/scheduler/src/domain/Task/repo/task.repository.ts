@@ -1,12 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { NotFoundError } from 'common-errors';
 import { AtomRepository } from '@/domain/Atom/repo/atom.repository';
-import { PipelineRepository } from '@/domain/Pipeline/repo/pipeline.repository';
-import { TaskEntity } from '../entity/Task';
-import { PipelineTaskRepository } from './pipeline-task.repository';
+import { TaskEntity } from '../entity/task.entity';
 import { Pagination } from '@/utils/orm';
+import { TaskUpdateDTO } from '../dto/Task.dto';
+import { isNil } from 'lodash';
+import { TaskResultRepository } from './task-result.repository';
 
 @Injectable()
 export class TaskRepository {
@@ -14,8 +15,8 @@ export class TaskRepository {
     @InjectRepository(TaskEntity)
     private repo: Repository<TaskEntity>,
     private atomRepo: AtomRepository,
-    private pipelineRepo: PipelineRepository,
-    private pipelineTaskRepo: PipelineTaskRepository,
+    @Inject(forwardRef(() => TaskResultRepository))
+    private taskResultRepo: TaskResultRepository,
   ) {}
 
   async save(entity: TaskEntity) {
@@ -93,5 +94,33 @@ export class TaskRepository {
     return [list, total];
   }
 
-  // TODO: update
+  async update(id: number, creatorId: string, data: TaskUpdateDTO) {
+    const entity = await this.getById(id, creatorId);
+    let updated = false;
+
+    if (!entity) {
+      throw new NotFoundError(`Task ${id}`);
+    }
+
+    if (!isNil(data.status)) {
+      entity.status = data.status;
+      updated = true;
+    }
+
+    if (!isNil(data.resultId)) {
+      const resultEntity = await this.taskResultRepo.getById(
+        data.resultId,
+        creatorId,
+      );
+
+      if (!resultEntity) {
+        throw new NotFoundError(`TaskResult ${data.resultId}`);
+      }
+
+      entity.result = resultEntity;
+      updated = true;
+    }
+
+    return updated ? this.repo.save(entity) : entity;
+  }
 }

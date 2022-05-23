@@ -1,3 +1,12 @@
+import {
+  IsBoolean,
+  IsEnum,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  Min,
+} from 'class-validator';
+
 export enum TaskStatus {
   pending,
   running,
@@ -5,15 +14,31 @@ export enum TaskStatus {
   failed,
 }
 
-export interface TaskCreateDTO {
+export class TaskCreateDTO {
+  @IsNumber()
+  @Min(1)
   atomId: number;
+
+  @IsNumber()
+  @Min(1)
+  @IsOptional()
   pipelineTaskId?: number;
-  result?: number;
+
+  @IsNumber()
+  @Min(1)
+  @IsOptional()
+  resultId?: number;
+
+  @IsEnum(TaskStatus)
   status: TaskStatus;
-  creatorId: number;
 }
 
-export interface TaskUpdateDTO {
+export class TaskUpdateDTO {
+  @IsNumber()
+  @IsOptional()
   resultId?: number;
+
+  @IsEnum(TaskStatus)
+  @IsOptional()
   status?: TaskStatus;
 }

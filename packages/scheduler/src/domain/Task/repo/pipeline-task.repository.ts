@@ -1,18 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository, In } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { NotFoundError } from 'common-errors';
-import { PipelineTaskEntity } from '../entity/PipelineTask';
-import { AtomRepository } from '@/domain/Atom/repo/atom.repository';
+import { PipelineTaskEntity } from '../entity/pipeline-task.entity';
 import { PipelineRepository } from '@/domain/Pipeline/repo/pipeline.repository';
 import { Pagination } from '@/utils/orm';
+import { PipelineTaskUpdateDTO } from '../dto/PipelineTask.dto';
+import { isNil } from 'lodash';
+import { TaskRepository } from './task.repository';
 
 @Injectable()
 export class PipelineTaskRepository {
   constructor(
     @InjectRepository(PipelineTaskEntity)
     private repo: Repository<PipelineTaskEntity>,
-    private atomRepo: AtomRepository,
+    @Inject(forwardRef(() => TaskRepository))
+    private taskRepo: TaskRepository,
     private pipelineRepo: PipelineRepository,
   ) {}
 
@@ -93,5 +96,30 @@ export class PipelineTaskRepository {
     return [list, total];
   }
 
-  // TODO: update
+  async update(id: number, creatorId: string, data: PipelineTaskUpdateDTO) {
+    const entity = await this.getById(id, creatorId);
+    let updated = false;
+
+    if (!entity) {
+      throw new NotFoundError(`PipelineTask ${id}`);
+    }
+
+    if (!isNil(data.status)) {
+      entity.status = data.status;
+      updated = true;
+    }
+
+    if (!isNil(data.rootTaskId)) {
+      const rootTask = await this.taskRepo.getById(data.rootTaskId, creatorId);
+
+      if (!rootTask) {
+        throw new NotFoundError(`Task ${data.rootTaskId}`);
+      }
+
+      entity.rootTask = rootTask;
+      updated = true;
+    }
+
+    return updated ? this.save(entity) : entity;
+  }
 }

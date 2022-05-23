@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PipelineRepository } from './repo/pipeline.repository';
 import { PipelineAtomRepository } from './repo/pipeline-atom.repository';
@@ -11,7 +11,7 @@ import { AtomModule } from '../Atom/atom.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([PipelineEntity, PipelineAtomEntity]),
-    AtomModule,
+    forwardRef(() => AtomModule),
   ],
   providers: [
     PipelineRepository,

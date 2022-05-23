@@ -3,9 +3,13 @@ import { NotFoundError } from 'common-errors';
 import { defaultPagination } from '@/utils/orm';
 import { TaskService } from './task.service';
 import { PipelineTaskRepository } from '../repo/pipeline-task.repository';
-import { PipelineTaskCreateDTO } from '../dto/PipelineTask.dto';
+import {
+  PipelineTaskCreateDTO,
+  PipelineTaskUpdateDTO,
+} from '../dto/PipelineTask.dto';
 import { PipelineService } from '@/domain/Pipeline/service/pipeline.service';
-import { PipelineTaskEntity } from '../entity/PipelineTask';
+import { PipelineTaskEntity } from '../entity/pipeline-task.entity';
+import { isNil } from 'lodash';
 
 @Injectable()
 export class PipelineTaskService {
@@ -15,10 +19,10 @@ export class PipelineTaskService {
     private taskService: TaskService,
   ) {}
 
-  async create(data: PipelineTaskCreateDTO) {
+  async create(data: PipelineTaskCreateDTO, creatorId: string) {
     const pipelineEntity = await this.pipelineService.getById(
       data.pipelineId,
-      data.creatorId,
+      creatorId,
     );
 
     if (!pipelineEntity) {
@@ -29,9 +33,9 @@ export class PipelineTaskService {
       pipeline: pipelineEntity,
       status: data.status,
       rootTask: data.rootTaskId
-        ? await this.pipelineService.getById(data.rootTaskId, data.creatorId)
+        ? await this.pipelineService.getById(data.rootTaskId, creatorId)
         : null,
-      creatorId: data.creatorId,
+      creatorId,
     });
 
     return this.repo.save(entity);
@@ -57,5 +61,33 @@ export class PipelineTaskService {
     return this.repo.findByCreatorId(creatorId, pagination);
   }
 
-  // TODO: update
+  async update(id: number, creatorId: string, data: PipelineTaskUpdateDTO) {
+    const entity = await this.getById(id, creatorId);
+    let updated = false;
+
+    if (!entity) {
+      throw new NotFoundError(`PipelineTask ${id}`);
+    }
+
+    if (!isNil(data.status)) {
+      entity.status = data.status;
+      updated = true;
+    }
+
+    if (!isNil(data.rootTaskId)) {
+      const rootTaskEntity = await this.taskService.getById(
+        data.rootTaskId,
+        creatorId,
+      );
+
+      if (!rootTaskEntity) {
+        throw new NotFoundError(`Task ${data.rootTaskId}`);
+      }
+
+      entity.rootTask = rootTaskEntity;
+      updated = true;
+    }
+
+    return updated ? this.repo.save(entity) : entity;
+  }
 }

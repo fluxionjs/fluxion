@@ -1,4 +1,5 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { RedisOptions } from 'ioredis';
 
 export default () => {
   const config: any = {};
@@ -14,6 +15,13 @@ export default () => {
     logging: true,
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
   } as TypeOrmModuleOptions;
+
+  config.redis = {
+    host: 'localhost',
+    port: 55000,
+    username: 'default',
+    password: 'redispw',
+  } as RedisOptions;
 
   return config;
 };

@@ -22,20 +22,48 @@ export class AtomEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
+  /**
+   * Name of the atom
+   * @type String
+   */
   @Column()
   name: string;
 
+  /**
+   * Description
+   * @type String
+   * @optional
+   */
   @Column({ nullable: true })
   description?: string;
 
+  /**
+   * Is enabled
+   * @type Boolean
+   * @default true
+   */
   @Column({ default: true })
   enabled: boolean;
 
-  @Column({
+  /**
+   * Connection URL string
+   *
+   * @type String
+   * @example
+   * - HTTP: `http://my-service/api/is-post-exists`
+   * - gRPC: `grpc://grpc.server.com:443/my.custom.server.Service/Method`
+   * - custom: `custom-provider://provider-host/event/send`
+   *
+   */
+  @Column('text', {
     name: 'connect_url',
   })
   connectUrl: string;
 
+  /**
+   * Creator ID
+   * @type String
+   */
   @Column({
     name: 'creator_id',
   })
