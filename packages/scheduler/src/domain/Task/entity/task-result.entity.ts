@@ -21,8 +21,8 @@ export const schema = yup.object().shape({
       TaskStatus.succeed,
     ])
     .required(),
-  payload: yup.object().required(),
-  content: yup.object().required(),
+  input: yup.object().required(),
+  output: yup.object().required(),
   creatorId: yup.string().min(1).required(),
 });
 
@@ -38,10 +38,10 @@ export class TaskResultEntity<T = unknown, K = unknown> {
   status: TaskStatus;
 
   @Column('simple-json')
-  payload: T;
+  input: T;
 
   @Column('simple-json')
-  content: K | Error;
+  output: K | Error;
 
   @Column({
     name: 'creator_id',
@@ -71,8 +71,8 @@ export class TaskResultEntity<T = unknown, K = unknown> {
     const entity = new TaskResultEntity();
     entity.task = data.task;
     entity.status = data.status;
-    entity.payload = data.payload;
-    entity.content = data.content;
+    entity.input = data.input;
+    entity.output = data.output;
     entity.creatorId = data.creatorId;
     return entity;
   }

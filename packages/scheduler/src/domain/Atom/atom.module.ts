@@ -9,6 +9,7 @@ import { TaskModule } from '../Task/task.module';
 import { HttpAtomWorker } from './worker/http.worker';
 import { JavaScriptAtomWorker } from './worker/javascript.worker';
 import { AtomWorkerService } from './service/atom-worker.service';
+import { PipelineModule } from '../Pipeline/pipeline.module';
 
 @Module({
   controllers: [AtomController],
@@ -18,6 +19,7 @@ import { AtomWorkerService } from './service/atom-worker.service';
       name: 'atom-task',
     }),
     forwardRef(() => TaskModule),
+    forwardRef(() => PipelineModule),
   ],
   providers: [
     AtomRepository,
@@ -26,6 +28,6 @@ import { AtomWorkerService } from './service/atom-worker.service';
     HttpAtomWorker,
     JavaScriptAtomWorker,
   ],
-  exports: [AtomRepository, AtomService],
+  exports: [AtomRepository, AtomService, AtomWorkerService],
 })
 export class AtomModule {}

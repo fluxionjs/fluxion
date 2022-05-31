@@ -2,9 +2,13 @@ import { NestFactory } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { Logger } from './common/logger.service';
+import { PipelineService } from './domain/Pipeline/service/pipeline.service';
 
 async function bootstrap(port: number) {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: new Logger(),
+  });
   const microservice = app.connectMicroservice({
     transport: Transport.NATS,
     options: {
@@ -23,6 +27,6 @@ async function bootstrap(port: number) {
   await app.startAllMicroservices();
   await microservice.listen();
   await app.listen(port);
-  console.log(`App listen on http://localhost:${port}`);
+  console.log(`Fluxion listen on http://localhost:${port}`);
 }
 bootstrap(3000);

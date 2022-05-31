@@ -6,7 +6,7 @@ import { AtomRepository } from '@/domain/Atom/repo/atom.repository';
 import { TaskEntity } from '../entity/task.entity';
 import { Pagination } from '@/utils/orm';
 import { TaskUpdateDTO } from '../dto/Task.dto';
-import { isNil } from 'lodash';
+import { isNil, pick } from 'lodash';
 import { TaskResultRepository } from './task-result.repository';
 
 @Injectable()
@@ -23,20 +23,28 @@ export class TaskRepository {
     return this.repo.save(entity);
   }
 
-  async getById(id: number, creatorId: string) {
+  async getById(
+    id: number,
+    creatorId: string,
+    relations = ['atom', 'pipelineTask', 'result', 'parentTask'],
+  ) {
     return this.repo.findOne({
       where: { id, creatorId },
-      relations: ['atom', 'pipelineTask', 'result'],
+      relations,
     });
   }
 
-  async getByIds(ids: number[], creatorId: string) {
+  async getByIds(
+    ids: number[],
+    creatorId: string,
+    relations = ['atom', 'pipelineTask', 'result', 'parentTask'],
+  ) {
     return this.repo.find({
       where: {
         id: In(ids),
         creatorId,
       },
-      relations: ['atom', 'pipelineTask', 'result'],
+      relations,
     });
   }
 
@@ -44,6 +52,7 @@ export class TaskRepository {
     atomId: number,
     creatorId: string,
     pagination: Pagination,
+    relations = ['pipelineTask', 'result', 'parentTask'],
   ): Promise<[list: TaskEntity[], total: number]> {
     const atomEntity = await this.atomRepo.getById(atomId, creatorId);
 
@@ -66,7 +75,7 @@ export class TaskRepository {
       },
       take: pagination.perPage,
       skip: (pagination.page - 1) * pagination.perPage,
-      relations: ['pipelineTask', 'result'],
+      relations,
     });
 
     return [list, total];
@@ -75,6 +84,7 @@ export class TaskRepository {
   async findByCreatorId(
     creatorId: string,
     pagination: Pagination,
+    relations = ['parentTask', 'pipeline', 'atom', 'result'],
   ): Promise<[list: TaskEntity[], total: number]> {
     const where = {
       where: { creatorId },
@@ -88,7 +98,33 @@ export class TaskRepository {
       },
       take: pagination.perPage,
       skip: (pagination.page - 1) * pagination.perPage,
-      relations: ['parentAtom', 'pipeline', 'atom', 'nextAtoms'],
+      relations,
+    });
+
+    return [list, total];
+  }
+
+  async findByParentTask(
+    parentTaskId: number,
+    creatorId: string,
+    pagination: Pagination,
+    relations = ['parentTask', 'pipeline', 'atom', 'result'],
+  ): Promise<[list: TaskEntity[], total: number]> {
+    const parentTask = await this.getById(parentTaskId, creatorId);
+
+    const where = {
+      where: { parentTask: pick(parentTask, 'id'), creatorId },
+    };
+
+    const total = await this.repo.count(where);
+    const list = await this.repo.find({
+      ...where,
+      order: {
+        id: 'DESC',
+      },
+      take: pagination.perPage,
+      skip: (pagination.page - 1) * pagination.perPage,
+      relations,
     });
 
     return [list, total];

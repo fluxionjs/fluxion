@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { isBoolean, isNil } from 'lodash';
@@ -6,12 +6,15 @@ import { PipelineQueryDTO, PipelineUpdateDTO } from '../dto/Pipeline.dto';
 import { PipelineEntity } from '../entity/pipeline.entity';
 import { Pagination } from '@/utils/orm';
 import { NotFoundError } from 'common-errors';
+import { PipelineAtomRepository } from './pipeline-atom.repository';
 
 @Injectable()
 export class PipelineRepository {
   constructor(
     @InjectRepository(PipelineEntity)
     private repo: Repository<PipelineEntity>,
+    @Inject(forwardRef(() => PipelineAtomRepository))
+    private pipelineAtomRepo: PipelineAtomRepository,
   ) {}
 
   async save(entity: PipelineEntity) {
@@ -41,12 +44,22 @@ export class PipelineRepository {
       updated = true;
     }
 
+    if (!isNil(data.rootAtomId)) {
+      const rootAtom = await this.pipelineAtomRepo.getById(
+        data.rootAtomId,
+        creatorId,
+      );
+      entity.rootAtom = rootAtom;
+      updated = true;
+    }
+
     return updated ? this.save(entity) : entity;
   }
 
   async getById(id: number, creatorId: string) {
     return this.repo.findOne({
       where: { id, creatorId },
+      relations: ['rootAtom'],
     });
   }
 
@@ -56,6 +69,7 @@ export class PipelineRepository {
         name,
         creatorId,
       },
+      relations: ['rootAtom'],
     });
   }
 
@@ -75,6 +89,7 @@ export class PipelineRepository {
       },
       take: pagination.perPage,
       skip: (pagination.page - 1) * pagination.perPage,
+      relations: ['rootAtom'],
     });
 
     return [list, total];
@@ -86,6 +101,9 @@ export class PipelineRepository {
     pagination: Pagination,
   ): Promise<[list: PipelineEntity[], total: number]> {
     const builder = this.repo.createQueryBuilder();
+
+    builder.leftJoinAndSelect('pipeline.rootAtom', 'atom');
+
     builder.andWhere('creator_id = :creatorId', { creatorId });
 
     if (query.name) {

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { NotFoundError } from 'common-errors';
 import { defaultPagination } from '@/utils/orm';
 import { TaskService } from './task.service';
@@ -15,7 +15,9 @@ import { isNil } from 'lodash';
 export class PipelineTaskService {
   constructor(
     private repo: PipelineTaskRepository,
+    @Inject(forwardRef(() => PipelineService))
     private pipelineService: PipelineService,
+    @Inject(forwardRef(() => TaskService))
     private taskService: TaskService,
   ) {}
 
@@ -41,8 +43,8 @@ export class PipelineTaskService {
     return this.repo.save(entity);
   }
 
-  async getById(id: number, creatorId: string) {
-    return this.repo.getById(id, creatorId);
+  async getById(id: number, creatorId: string, loadTasks = false) {
+    return this.repo.getById(id, creatorId, loadTasks);
   }
 
   async getByIds(ids: number[], creatorId: string) {

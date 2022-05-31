@@ -1,8 +1,15 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToOne,
+  JoinColumn,
+} from 'typeorm';
 import * as dayjs from 'dayjs';
 import * as yup from 'yup';
 import { dateTransformer } from '@/utils/orm';
 import { PipelineCreateDTO } from '../dto/Pipeline.dto';
+import { PipelineAtomEntity } from './pipeline-atom.entity';
 
 export const schema = yup.object().shape({
   name: yup.string().min(1).required(),
@@ -24,6 +31,10 @@ export class PipelineEntity {
 
   @Column({ default: true })
   enabled: boolean;
+
+  @OneToOne(() => PipelineAtomEntity, { nullable: true })
+  @JoinColumn({ name: 'root_atom_id' })
+  rootAtom?: PipelineAtomEntity;
 
   @Column({
     name: 'creator_id',

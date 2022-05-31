@@ -41,11 +41,9 @@ export class TaskResultRepository {
       throw new NotFoundError(`Task ${taskId}`);
     }
 
-    return this.repo.findOne({
-      where: {
-        task: taskEntity,
-        creatorId,
-      },
+    return this.repo.findOneBy({
+      task: taskEntity,
+      creatorId,
     });
   }
 

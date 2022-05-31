@@ -8,19 +8,20 @@ import {
   Body,
   Param,
   ParseIntPipe,
+  Put,
 } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { pick } from 'lodash';
 import { ServiceResult } from '@/common/service-result.dto';
-import { AtomCreateDTO, AtomQueryDTO } from '../dto/Atom.dto';
+import { AtomCreateDTO, AtomQueryDTO, AtomUpdateDTO } from '../dto/Atom.dto';
 import { AtomService } from '../service/atom.service';
 import { Pagination } from '@/utils/orm';
 import { ParseInstance } from '@/utils/dto';
 import { NotFoundError } from 'common-errors';
 
 @ApiTags('atom')
-@Controller('atom')
+@Controller('/api/atom')
 @UseInterceptors(ClassSerializerInterceptor)
 export class AtomController {
   constructor(private atomService: AtomService) {}
@@ -38,10 +39,37 @@ export class AtomController {
     }
   }
 
-  @MessagePattern('fluxion.atom.getAtom')
+  @MessagePattern('fluxion.atom.update')
+  async update(
+    @Payload('id') id: number,
+    @Payload('user-id') creatorId: string,
+    @Payload('data', ParseInstance()) data: AtomUpdateDTO,
+  ) {
+    try {
+      const atomEntity = await this.atomService.update(id, creatorId, data);
+      return ServiceResult.successful(atomEntity);
+    } catch (err) {
+      return ServiceResult.failure(err);
+    }
+  }
+
+  @MessagePattern('fluxion.atom.getById')
   async get(@Payload('id') id: number, @Payload('user-id') creatorId: string) {
     try {
       const atomEntity = await this.atomService.getById(id, creatorId);
+      return ServiceResult.successful(atomEntity);
+    } catch (err) {
+      return ServiceResult.failure(err);
+    }
+  }
+
+  @MessagePattern('fluxion.atom.getByName')
+  async getByName(
+    @Payload('name') name: string,
+    @Payload('user-id') creatorId: string,
+  ) {
+    try {
+      const atomEntity = await this.atomService.getByName(name, creatorId);
       return ServiceResult.successful(atomEntity);
     } catch (err) {
       return ServiceResult.failure(err);
@@ -63,11 +91,37 @@ export class AtomController {
     return ServiceResult.successfuls(list, total, pagination.page || 1);
   }
 
+  @MessagePattern('fluxion.atom.enable')
+  async enable(
+    @Payload('id') id: number,
+    @Payload('user-id') creatorId: string,
+  ) {
+    try {
+      const atomEntity = await this.atomService.enable(id, creatorId);
+      return ServiceResult.successful(atomEntity);
+    } catch (err) {
+      return ServiceResult.failure(err);
+    }
+  }
+
+  @MessagePattern('fluxion.atom.disable')
+  async disable(
+    @Payload('id') id: number,
+    @Payload('user-id') creatorId: string,
+  ) {
+    try {
+      const atomEntity = await this.atomService.disable(id, creatorId);
+      return ServiceResult.successful(atomEntity);
+    } catch (err) {
+      return ServiceResult.failure(err);
+    }
+  }
+
   @MessagePattern('fluxion.atom.execute')
   async execute<T = unknown>(
     @Payload('id') id: number,
     @Payload('user-id') creatorId: string,
-    @Payload('payload') payload: T,
+    @Payload('input') input: T,
   ) {
     const atomEntity = await this.atomService.getById(id, creatorId);
     if (!atomEntity) {
@@ -75,7 +129,7 @@ export class AtomController {
     }
 
     try {
-      const taskEntity = await this.atomService.execute(atomEntity, payload);
+      const taskEntity = await this.atomService.execute(atomEntity, input);
       return ServiceResult.successful(taskEntity);
     } catch (err) {
       return ServiceResult.failure(err);
@@ -93,12 +147,29 @@ export class AtomController {
     return this.create(creatorId, data);
   }
 
+  @Put('/:id')
+  async updateHTTP(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('user-id') creatorId: string,
+    @Body(ParseInstance()) data: AtomUpdateDTO,
+  ) {
+    return this.update(id, creatorId, data);
+  }
+
   @Get('/:id')
   async getHTTP(
     @Param('id', ParseIntPipe) id: number,
     @Query('user-id') creatorId: string,
   ) {
     return this.get(id, creatorId);
+  }
+
+  @Get('/name/:name')
+  async getByNameHTTP(
+    @Param('name') name: string,
+    @Query('user-id') creatorId: string,
+  ) {
+    return this.getByName(name, creatorId);
   }
 
   @Get()
@@ -112,12 +183,28 @@ export class AtomController {
     return this.query(creatorId, query);
   }
 
+  @Put('/:id')
+  async enableHTTP(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('user-id') creatorId: string,
+  ) {
+    return this.enable(id, creatorId);
+  }
+
+  @Put('/:id')
+  async disableHTTP(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('user-id') creatorId: string,
+  ) {
+    return this.disable(id, creatorId);
+  }
+
   @Post('/:id/execute')
   async executeHTTP<T = unknown>(
     @Param('id', ParseIntPipe) id: number,
     @Query('user-id') creatorId: string,
-    @Body('payload') payload: T,
+    @Body('input') input: T,
   ) {
-    return this.execute(id, creatorId, payload);
+    return this.execute(id, creatorId, input);
   }
 }

@@ -1,40 +1,100 @@
-import { IsOptional, IsNumber, Min } from 'class-validator';
+import {
+  IsOptional,
+  IsArray,
+  IsString,
+  Validate,
+  IsNotEmpty,
+  IsInt,
+  IsPositive,
+} from 'class-validator';
+import { isUrl } from '@/domain/Atom/dto/Atom.dto';
 
 export class PipelineAtomCreateDTO {
-  @IsNumber()
-  @Min(1)
+  @IsInt()
+  @IsPositive()
   @IsOptional()
   parentAtomId?: number;
 
-  @IsNumber()
-  @Min(1)
+  @IsInt()
+  @IsPositive()
   pipelineId: number;
 
-  @IsNumber()
-  @Min(1)
+  @IsInt()
+  @IsPositive()
   atomId: number;
+
+  @IsString()
+  @Validate(isUrl)
+  @IsNotEmpty()
+  @IsOptional()
+  inputMappingCode?: string;
+
+  @IsString()
+  @Validate(isUrl)
+  @IsNotEmpty()
+  @IsOptional()
+  outputMappingCode?: string;
 }
 
-export class PipelineQueryDTO {
-  @IsNumber()
-  @Min(1)
-  @IsOptional()
-  parentAtomId?: number;
-
-  @IsNumber()
-  @Min(1)
+export class PipelineAtomBatchCreateDTO {
+  @IsInt()
+  @IsPositive()
   @IsOptional()
   pipelineId?: number;
 
-  @IsNumber()
-  @Min(1)
+  @IsInt()
+  @IsPositive()
+  atomId: number;
+
+  @IsString()
+  @Validate(isUrl)
+  @IsNotEmpty()
+  @IsOptional()
+  inputMappingCode?: string;
+
+  @IsString()
+  @Validate(isUrl)
+  @IsNotEmpty()
+  @IsOptional()
+  outputMappingCode?: string;
+
+  @IsArray()
+  @IsOptional()
+  nextAtoms?: PipelineAtomBatchCreateDTO[];
+}
+
+export class PipelineQueryDTO {
+  @IsInt()
+  @IsPositive()
+  @IsOptional()
+  parentAtomId?: number;
+
+  @IsInt()
+  @IsPositive()
+  @IsOptional()
+  pipelineId?: number;
+
+  @IsInt()
+  @IsPositive()
   @IsOptional()
   atomId?: number;
 }
 
 export class PipelineAtomUpdateDTO {
-  @IsNumber()
-  @Min(1)
+  @IsInt()
+  @IsPositive()
   @IsOptional()
   parentAtomId?: number;
+
+  @IsString()
+  @Validate(isUrl)
+  @IsNotEmpty()
+  @IsOptional()
+  inputMappingCode?: string;
+
+  @IsString()
+  @Validate(isUrl)
+  @IsNotEmpty()
+  @IsOptional()
+  outputMappingCode?: string;
 }

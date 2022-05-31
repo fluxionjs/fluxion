@@ -21,9 +21,9 @@ export class TaskResultCreateDTO<T = unknown, K = unknown> {
   @IsEnum(TaskStatus)
   status: TaskStatus;
 
-  payload: T;
+  input: T;
 
-  content: K | Error;
+  output: K | Error;
 }
 
 export class NextAtomOption<T = unknown> {
@@ -40,14 +40,18 @@ export class NextAtomOption<T = unknown> {
   @IsObject()
   @IsNotEmpty()
   @IsOptional()
-  payload?: T;
+  input?: T;
+
+  @IsBoolean()
+  @IsOptional()
+  only?: boolean;
 }
 
 export class WorkerTaskResult<T = unknown> {
   @IsBoolean()
   success: boolean;
 
-  payload: T | Error;
+  output: T | Error;
 
   @IsArray()
   @Type(() => NextAtomOption)
@@ -58,37 +62,37 @@ export class WorkerTaskResult<T = unknown> {
     return obj instanceof WorkerTaskResult;
   }
 
-  static create<T>(payload: T, nextAtoms?: NextAtomOption[]);
-  static create<T>(success: boolean, payload: T, nextAtoms?: NextAtomOption[]);
+  static create<T>(output: T, nextAtoms?: NextAtomOption[]);
+  static create<T>(success: boolean, output: T, nextAtoms?: NextAtomOption[]);
   static create<T>(
-    successOrPayload: boolean | T,
-    payloadOrNextAtoms: T | NextAtomOption[],
+    successOrOutput: boolean | T,
+    outputOrNextAtoms: T | NextAtomOption[],
     nextAtoms?: NextAtomOption[],
   ) {
     const result = new WorkerTaskResult();
 
-    if (isBoolean(successOrPayload)) {
-      result.success = successOrPayload;
-      result.payload = payloadOrNextAtoms;
+    if (isBoolean(successOrOutput)) {
+      result.success = successOrOutput;
+      result.output = outputOrNextAtoms;
       result.nextAtoms = nextAtoms;
     }
 
-    if (!nextAtoms && isObject(successOrPayload)) {
+    if (!nextAtoms && isObject(successOrOutput)) {
       result.success = true;
-      result.payload = successOrPayload;
-      if (Array.isArray(payloadOrNextAtoms)) {
-        result.nextAtoms = payloadOrNextAtoms;
+      result.output = successOrOutput;
+      if (Array.isArray(outputOrNextAtoms)) {
+        result.nextAtoms = outputOrNextAtoms;
       }
     }
 
     return result;
   }
 
-  static triggerNextAtom<T>(id: number, payload: T): NextAtomOption<T>;
-  static triggerNextAtom<T>(name: string, payload: T): NextAtomOption<T>;
-  static triggerNextAtom<T>(idOrName: number | string, payload: T) {
+  static triggerNextAtom<T>(id: number, input: T): NextAtomOption<T>;
+  static triggerNextAtom<T>(name: string, input: T): NextAtomOption<T>;
+  static triggerNextAtom<T>(idOrName: number | string, input: T) {
     const opt = new NextAtomOption();
-    opt.payload = payload;
+    opt.input = input;
 
     if (isNumber(idOrName)) {
       opt.atomId = idOrName;

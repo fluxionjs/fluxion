@@ -1,17 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { validate } from 'class-validator';
-import * as vm from 'vm';
+import { NodeVM } from 'vm2';
 import { WorkerTaskResult } from '@/domain/Task/dto/TaskResult.dto';
 import { AtomEntity } from '../entity/atom.entity';
 import { AtomExecuteOptions, AtomWorker } from './base-worker';
 import { isFunction } from 'lodash';
 import { ValidationError } from 'common-errors';
 
+function isESModule(mod) {
+  return mod.__esModule;
+}
+
 @Injectable()
 export class JavaScriptAtomWorker implements AtomWorker {
   async execute<T, K = unknown>(
     atomEntity: AtomEntity,
-    payload: T,
+    input: T,
     options?: AtomExecuteOptions,
   ): Promise<WorkerTaskResult<K>> {
     try {
@@ -19,26 +23,40 @@ export class JavaScriptAtomWorker implements AtomWorker {
       const encodedCode = url.hostname;
       const jsCode = Buffer.from(encodedCode, 'base64').toString();
 
-      const vmScript = new vm.Script(jsCode);
-
-      const context = vm.createContext({
-        module: {},
-        require,
-        console,
+      const vm = new NodeVM({
+        console: 'off',
+        sandbox: {},
+        require: {
+          root: './',
+          builtin: [
+            'crypto',
+            'events',
+            'path',
+            'url',
+            'querystring',
+            'util',
+            'zlib',
+          ],
+          external: ['lodash'],
+        },
+        timeout: 1000,
       });
 
-      vmScript.runInContext(context);
+      let atomFunc = vm.run(jsCode, 'atom.js');
 
-      if (!isFunction(context.module.exports)) {
+      if (isESModule(atomFunc)) {
+        atomFunc = atomFunc.default;
+      }
+
+      if (!isFunction(atomFunc)) {
         throw new ValidationError(
           'JavaScript Code should exports a function through module.exports',
         );
         // TODO: add a document link to the error message
       }
 
-      const func = context.module.exports;
       const reply: WorkerTaskResult<K> = await Promise.resolve(
-        func(payload, options, {
+        atomFunc(input, options, {
           createResult: WorkerTaskResult.create,
           triggerNextAtom: WorkerTaskResult.triggerNextAtom,
         }),

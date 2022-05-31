@@ -31,8 +31,7 @@ export const schema = yup.object().shape({
     .required(),
   rootTask: yup
     .mixed<TaskEntity>()
-    .test((input) => input instanceof TaskEntity)
-    .required(),
+    .test((input) => !input || input instanceof TaskEntity),
   creatorId: yup.string().min(1).required(),
 });
 

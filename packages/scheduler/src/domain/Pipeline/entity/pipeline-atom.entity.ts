@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import * as dayjs from 'dayjs';
 import * as yup from 'yup';
+import * as url from 'url';
 import { PipelineEntity } from './pipeline.entity';
 import { AtomEntity } from '@/domain/Atom/entity/atom.entity';
 import { dateTransformer } from '@/utils/orm';
@@ -15,7 +16,7 @@ import { PipelineAtomCreateDTO } from '../dto/PipelineAtom.dto';
 export const schema = yup.object().shape({
   parentAtom: yup
     .mixed<PipelineAtomEntity>()
-    .test((input) => input instanceof PipelineAtomEntity),
+    .test((input) => !input || input instanceof PipelineAtomEntity),
   pipeline: yup
     .mixed<PipelineEntity>()
     .test((input) => input instanceof PipelineEntity)
@@ -24,6 +25,8 @@ export const schema = yup.object().shape({
     .mixed<AtomEntity>()
     .test((input) => input instanceof AtomEntity)
     .required(),
+  inputMappingCode: yup.string().test((val) => !!url.parse(val)),
+  outputMappingCode: yup.string().test((val) => !!url.parse(val)),
   nextAtoms: yup
     .array()
     .of(
@@ -50,6 +53,12 @@ export class PipelineAtomEntity {
   @ManyToOne(() => AtomEntity)
   @JoinColumn({ name: 'atom_id' })
   atom: AtomEntity;
+
+  @Column('text', { name: 'input_mapping_code', nullable: true })
+  inputMappingCode?: string;
+
+  @Column('text', { name: 'output_mapping_code', nullable: true })
+  outputMappingCode?: string;
 
   @Column({
     name: 'creator_id',
@@ -80,6 +89,8 @@ export class PipelineAtomEntity {
     entity.atom = data.atom;
     entity.pipeline = data.pipeline;
     entity.parentAtom = data.parentAtom;
+    entity.inputMappingCode = data.inputMappingCode;
+    entity.outputMappingCode = data.outputMappingCode;
     entity.creatorId = data.creatorId;
     return entity;
   }

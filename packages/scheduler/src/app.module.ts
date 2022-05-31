@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { BullModule } from '@nestjs/bull';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { FluxionConfigModule } from './config/config.module';
@@ -17,6 +17,7 @@ import { QueueModule } from './common/queue.module';
     AtomModule,
     PipelineModule,
     TaskModule,
+    EventEmitterModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService],

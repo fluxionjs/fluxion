@@ -11,6 +11,7 @@ import { TaskResultRepository } from './repo/task-result.repository';
 import { TaskRepository } from './repo/task.repository';
 import { PipelineTaskService } from './service/pipeline-task.service';
 import { TaskResultService } from './service/task-result.service';
+import { PipelineTaskController } from './controller/pipeline-task.controller';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { TaskResultService } from './service/task-result.service';
     forwardRef(() => AtomModule),
     forwardRef(() => PipelineModule),
   ],
+  controllers: [PipelineTaskController],
   providers: [
     PipelineTaskRepository,
     TaskResultRepository,

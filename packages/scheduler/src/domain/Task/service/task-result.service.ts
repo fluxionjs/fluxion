@@ -24,8 +24,8 @@ export class TaskResultService {
     const entity = TaskResultEntity.create({
       task: taskEntity,
       status: data.status,
-      payload: data.payload,
-      content: data.content,
+      input: data.input,
+      output: data.output,
       creatorId,
     });
 

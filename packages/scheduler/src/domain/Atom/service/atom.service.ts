@@ -47,11 +47,7 @@ export class AtomService {
     return this.repo.disable(id, userId);
   }
 
-  async execute<T>(
-    entity: AtomEntity,
-    payload: T,
-    options?: AtomExecuteOptions,
-  ) {
-    return this.atomWorkerService.execute(entity, payload, options);
+  async execute<T>(entity: AtomEntity, input: T, options?: AtomExecuteOptions) {
+    return this.atomWorkerService.execute(entity, input, options);
   }
 }

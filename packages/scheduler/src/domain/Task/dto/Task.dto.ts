@@ -1,11 +1,4 @@
-import {
-  IsBoolean,
-  IsEnum,
-  IsNumber,
-  IsObject,
-  IsOptional,
-  Min,
-} from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsPositive } from 'class-validator';
 
 export enum TaskStatus {
   pending,
@@ -16,18 +9,23 @@ export enum TaskStatus {
 
 export class TaskCreateDTO {
   @IsNumber()
-  @Min(1)
+  @IsPositive()
   atomId: number;
 
   @IsNumber()
-  @Min(1)
+  @IsPositive()
   @IsOptional()
   pipelineTaskId?: number;
 
   @IsNumber()
-  @Min(1)
+  @IsPositive()
   @IsOptional()
   resultId?: number;
+
+  @IsNumber()
+  @IsPositive()
+  @IsOptional()
+  parentTaskId?: number;
 
   @IsEnum(TaskStatus)
   status: TaskStatus;

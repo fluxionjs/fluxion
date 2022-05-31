@@ -11,7 +11,7 @@ import { URL } from 'url';
 import { Pagination } from '@/utils/orm';
 import { transformBool } from '@/utils/dto';
 
-function isUrl(val: string) {
+export function isUrl(val: string) {
   const url = new URL(val);
   return !isEmpty(url.protocol) && !isEmpty(url.host);
 }

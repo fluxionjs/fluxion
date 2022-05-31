@@ -1,5 +1,6 @@
-import { WorkerTaskResult } from '@/domain/Task/dto/TaskResult.dto';
 import { Injectable } from '@nestjs/common';
+import axios from 'axios';
+import { WorkerTaskResult } from '@/domain/Task/dto/TaskResult.dto';
 import { AtomEntity } from '../entity/atom.entity';
 import { AtomExecuteOptions, AtomWorker } from './base-worker';
 
@@ -7,23 +8,17 @@ import { AtomExecuteOptions, AtomWorker } from './base-worker';
 export class HttpAtomWorker implements AtomWorker {
   async execute<T, K = unknown>(
     atomEntity: AtomEntity,
-    payload: T,
+    input: T,
     options?: AtomExecuteOptions,
   ): Promise<WorkerTaskResult<K>> {
     const url = atomEntity.connectUrl;
 
     try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          payload,
-          options,
-        }),
+      const res = await axios.post<WorkerTaskResult<K>>(url, {
+        input,
+        options,
       });
-      const reply: WorkerTaskResult<K> = await res.json();
+      const reply = res.data;
       return reply;
     } catch (err) {
       const reply = new WorkerTaskResult<K>();

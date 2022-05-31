@@ -19,6 +19,9 @@ export const schema = yup.object().shape({
     .mixed<AtomEntity>()
     .test((input) => input instanceof AtomEntity)
     .required(),
+  parentTask: yup
+    .mixed<TaskEntity>()
+    .test((input) => !input || input instanceof TaskEntity),
   pipelineTask: yup
     .mixed<PipelineTaskEntity>()
     .optional()
@@ -44,6 +47,10 @@ export const schema = yup.object().shape({
 export class TaskEntity {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @ManyToOne(() => TaskEntity, { nullable: true })
+  @JoinColumn({ name: 'parent_task_id' })
+  parentTask?: TaskEntity;
 
   @ManyToOne(() => AtomEntity)
   @JoinColumn({ name: 'atom_id' })
@@ -88,6 +95,7 @@ export class TaskEntity {
     const entity = new TaskEntity();
     entity.atom = data.atom;
     entity.pipelineTask = data.pipelineTask;
+    entity.parentTask = data.parentTask;
     entity.result = data.result;
     entity.status = data.status;
     entity.creatorId = data.creatorId;

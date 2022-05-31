@@ -5,9 +5,14 @@ import { NotFoundError } from 'common-errors';
 import { PipelineTaskEntity } from '../entity/pipeline-task.entity';
 import { PipelineRepository } from '@/domain/Pipeline/repo/pipeline.repository';
 import { Pagination } from '@/utils/orm';
-import { PipelineTaskUpdateDTO } from '../dto/PipelineTask.dto';
+import {
+  NestAtomTask,
+  PipelineTaskDTO,
+  PipelineTaskUpdateDTO,
+} from '../dto/PipelineTask.dto';
 import { isNil } from 'lodash';
 import { TaskRepository } from './task.repository';
+import { TaskEntity } from '../entity/task.entity';
 
 @Injectable()
 export class PipelineTaskRepository {
@@ -23,11 +28,46 @@ export class PipelineTaskRepository {
     return this.repo.save(entity);
   }
 
-  async getById(id: number, creatorId: string) {
-    return this.repo.findOne({
+  async getById(id: number, creatorId: string, loadTasks = false) {
+    const pipelineTask: PipelineTaskDTO = await this.repo.findOne({
       where: { id, creatorId },
       relations: ['pipeline', 'rootTask'],
     });
+
+    if (!loadTasks) {
+      return pipelineTask;
+    }
+
+    const loadTask = async (taskEntity: TaskEntity): Promise<NestAtomTask> => {
+      if (!taskEntity.result) {
+        taskEntity = await this.taskRepo.getById(taskEntity.id, creatorId, [
+          'atom',
+          'result',
+        ]);
+      }
+      const [nextAtomTasks] = await this.taskRepo.findByParentTask(
+        taskEntity.id,
+        creatorId,
+        {
+          page: 1,
+          perPage: 100,
+        },
+        null,
+      );
+      return {
+        ...taskEntity,
+        nextTasks:
+          nextAtomTasks && nextAtomTasks.length > 0
+            ? await Promise.all(
+                nextAtomTasks.map((nextTask) => loadTask(nextTask)),
+              )
+            : undefined,
+      };
+    };
+
+    pipelineTask.rootTask = await loadTask(pipelineTask.rootTask);
+
+    return pipelineTask;
   }
 
   async getByIds(ids: number[], creatorId: string) {
